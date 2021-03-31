@@ -1,22 +1,23 @@
 import os
 import numpy as np
-import PIL as Image
+import PIL.Image as Image
 import json
 import torch
-
-# Given a symbol value in the class label dictionary, get the corresponding
-# key which is the class label
-def getClassLabelFromSymbol(classLabelDict, symbol):
-    
-    for n in range(len(classLabelDict)):
-        tempsymbol = classLabelDict[str(n+1)]
-        if tempsymbol == symbol:
-            return n+1
-     
-    raise ValueError('No class label found for this symbol.')
     
 
 class MEdataset(object):
+    
+    # Given a symbol value in the class label dictionary, get the corresponding
+    # key which is the class label
+    def getClassLabelFromSymbol(self, classLabelDict, symbol):
+        
+        for n in range(len(classLabelDict)):
+            tempsymbol = classLabelDict[str(n+1)]
+            if tempsymbol == symbol:
+                return n+1
+         
+        raise ValueError('No class label found for this symbol.')
+    
     def __init__(self, root, transforms):
         self.root = root
         self.transforms = transforms
@@ -50,7 +51,7 @@ class MEdataset(object):
             ymax = annotation['image_data']['ymaxs_raw'][n]
             boxes.append([xmin, ymin, xmax, ymax])
             labelSymbol = annotation['image_data']['visible_latex_chars'][n]
-            labels[n] = getClassLabelFromSymbol(self.classLabels, labelSymbol)
+            labels.append(self.getClassLabelFromSymbol(self.classLabels, labelSymbol))
             
         # convert everything into a torch.Tensor
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
@@ -76,3 +77,5 @@ class MEdataset(object):
     
     def __len__(self):
         return len(self.imgs)
+    
+   
