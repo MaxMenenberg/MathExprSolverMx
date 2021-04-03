@@ -1,0 +1,71 @@
+---------------------------------------------------------------------------
+IndexError                                Traceback (most recent call last)
+<ipython-input-9-e3315f42a506> in <module>
+      8     lr_scheduler.step()
+      9     # evaluate on the test dataset
+---> 10     evaluate(model, data_loader_test, device=device)
+
+~\Anaconda3\lib\site-packages\torch\autograd\grad_mode.py in decorate_context(*args, **kwargs)
+     25         def decorate_context(*args, **kwargs):
+     26             with self.__class__():
+---> 27                 return func(*args, **kwargs)
+     28         return cast(F, decorate_context)
+     29 
+
+~\Desktop\My Documents\MathExprSolverMx\MathExprSolverMx\training\engine.py in evaluate(model, data_loader, device)
+     82     coco_evaluator = CocoEvaluator(coco, iou_types)
+     83 
+---> 84     for images, targets in metric_logger.log_every(data_loader, 100, header):
+     85         images = list(img.to(device) for img in images)
+     86 
+
+~\Desktop\My Documents\MathExprSolverMx\MathExprSolverMx\training\utils.py in log_every(self, iterable, print_freq, header)
+    207             ])
+    208         MB = 1024.0 * 1024.0
+--> 209         for obj in iterable:
+    210             data_time.update(time.time() - end)
+    211             yield obj
+
+~\Anaconda3\lib\site-packages\torch\utils\data\dataloader.py in __next__(self)
+    515             if self._sampler_iter is None:
+    516                 self._reset()
+--> 517             data = self._next_data()
+    518             self._num_yielded += 1
+    519             if self._dataset_kind == _DatasetKind.Iterable and \
+
+~\Anaconda3\lib\site-packages\torch\utils\data\dataloader.py in _next_data(self)
+   1197             else:
+   1198                 del self._task_info[idx]
+-> 1199                 return self._process_data(data)
+   1200 
+   1201     def _try_put_index(self):
+
+~\Anaconda3\lib\site-packages\torch\utils\data\dataloader.py in _process_data(self, data)
+   1223         self._try_put_index()
+   1224         if isinstance(data, ExceptionWrapper):
+-> 1225             data.reraise()
+   1226         return data
+   1227 
+
+~\Anaconda3\lib\site-packages\torch\_utils.py in reraise(self)
+    427             # have message field
+    428             raise self.exc_type(message=msg)
+--> 429         raise self.exc_type(msg)
+    430 
+    431 
+
+IndexError: Caught IndexError in DataLoader worker process 0.
+Original Traceback (most recent call last):
+  File "C:\Users\maxwe\Anaconda3\lib\site-packages\torch\utils\data\_utils\worker.py", line 202, in _worker_loop
+    data = fetcher.fetch(index)
+  File "C:\Users\maxwe\Anaconda3\lib\site-packages\torch\utils\data\_utils\fetch.py", line 44, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "C:\Users\maxwe\Anaconda3\lib\site-packages\torch\utils\data\_utils\fetch.py", line 44, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "C:\Users\maxwe\Anaconda3\lib\site-packages\torch\utils\data\dataset.py", line 330, in __getitem__
+    return self.dataset[self.indices[idx]]
+  File "C:\Users\maxwe\Desktop\My Documents\MathExprSolverMx\MathExprSolverMx\training\MathExpressionDataset.py", line 36, in __getitem__
+    img_path = os.path.join(self.root, 'images', self.imgs[idx])
+IndexError: list index out of range
+
+​
