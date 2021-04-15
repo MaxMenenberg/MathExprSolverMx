@@ -41,7 +41,7 @@ def add_text_border(draw_obj, text, xmin, ymin):
     draw_obj.text((xmin, ymin+2), text, fill="black")
 
 
-def draw_bounding_boxes_on_image(img, xmins, ymins, xmaxs, ymaxs, labels, labelMap,scores, scoreLim):
+def draw_bounding_boxes_on_image(img, xmins, ymins, xmaxs, ymaxs, labels,scores, scoreLim):
     """
     Draws and labels bounding boxes on source image using ground truth lists of details pertaining to the source image. Modifies the source image in place.
     
@@ -62,12 +62,12 @@ def draw_bounding_boxes_on_image(img, xmins, ymins, xmaxs, ymaxs, labels, labelM
     for xmin, ymin, xmax, ymax, label, score in zip(xmins, ymins, xmaxs, ymaxs, labels,scores):
         if score > scoreLim:
             draw_obj.rectangle([xmin, ymin, xmax, ymax], width=3, outline=(255,0,0))
-            text = str(labelMap[str(label)])
+            text = str(label)
             #add_text_border(draw_obj, text, xmin, ymin)
             draw_obj.text((xmin, ymin), text, fill = "green")
 
-modelFile = r'C:\Users\maxwe\Desktop\My Documents\MathExprSolverMx\MathExprSolverMx\training\mathRecognizerMx_1epoch.pt'
-testImageFile = r'C:\Users\maxwe\Desktop\My Documents\MathExprSolverMx\MathExprSolverMx\AidaCalculusHandWrittenMathDataset\archive\train\images\000a68d7-b17b-4d01-891f-1fd24ea33acd.jpg'
+modelFile = r'C:\Users\maxwe\Desktop\My Documents\MathExprSolverMx\MathExprSolverMx\training\mathRecognizerMx_4epochw20kBgrd.pt'
+testImageFile = r'C:\Users\maxwe\Desktop\My Documents\MathExprSolverMx\MathExprSolverMx\AidaCalculusHandWrittenMathDataset\archive\test\images\5dcfbfda-bfaf-4502-9916-554023f18d21.jpg'
 testImageFile = os.path.join(os.getcwd(),'testimg.jpg')
 image = Image.open(testImageFile).convert("RGB")
 imageTensor = PilImage2Tensot(image)
@@ -97,8 +97,10 @@ detections = model(imageTensor)
 boxes = np.round(detections[0]["boxes"].detach().numpy())
 labels = detections[0]["labels"].detach().numpy()
 scores = detections[0]["scores"].detach().numpy()
-
-draw_bounding_boxes_on_image(image, boxes[:,0],  boxes[:,1], boxes[:,2],  boxes[:,3], labels, classLabels,scores,scoreLim=0.5)
+labelSymbols = [];
+for n in range(len(labels)):
+    labelSymbols.append(classLabels[str(labels[n])])
+draw_bounding_boxes_on_image(image, boxes[:,0],  boxes[:,1], boxes[:,2],  boxes[:,3], labelSymbols ,scores,scoreLim=0.5)
 
 
 # Visualize!

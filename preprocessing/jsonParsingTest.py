@@ -5,7 +5,7 @@ from io import BytesIO
 import os
 from IPython.display import display
 
-exampleDir = r'C:\Users\maxwe\Desktop\My Documents\SolverMx\AidaCalculusHandWrittenMathDataset\archive\extras\single_example'
+exampleDir = r'C:\Users\maxwe\Desktop\My Documents\MathExprSolverMx\MathExprSolverMx\AidaCalculusHandWrittenMathDataset\archive\extras\single_example'
 
 testJson = os.path.join(exampleDir, 'example.json')
 testImg = os.path.join(exampleDir, 'example_img.jpg')

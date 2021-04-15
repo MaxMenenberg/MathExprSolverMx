@@ -1,11 +1,11 @@
 import torch
 from MathExpressionDataset import MEdataset
  
-rootDir = r'C:\Users\maxwe\Desktop\My Documents\MathExprSolverMx\MathExprSolverMx\AidaCalculusHandWrittenMathDataset\archive\test'
+rootDir = r'C:\Users\maxwe\Desktop\My Documents\MathExprSolverMx\MathExprSolverMx\whiteboardImages'
  
  
 trainSet = MEdataset(rootDir, None)
-img, trg = trainSet[0]
+img, trg = trainSet[11]
 badIndices = []
 for n in range(len(trainSet)):
     try:

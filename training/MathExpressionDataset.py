@@ -38,37 +38,50 @@ class MEdataset(object):
         
         img = Image.open(img_path).convert("RGB")
         
-        with open(annotation_path) as f:
-            annotation = json.load(f)
-        
-        objNum = len(annotation['image_data']['visible_latex_chars'])
-        boxes = []
-        labels = []
-        for n in range(objNum):
-            xmin = annotation['image_data']['xmins_raw'][n]
-            xmax = annotation['image_data']['xmaxs_raw'][n]
-            ymin = annotation['image_data']['ymins_raw'][n]
-            ymax = annotation['image_data']['ymaxs_raw'][n]
-            boxes.append([xmin, ymin, xmax, ymax])
-            labelSymbol = annotation['image_data']['visible_latex_chars'][n]
-            labels.append(self.getClassLabelFromSymbol(self.classLabels, labelSymbol))
+        if annotation_path[-13:] == 'bkgrdImg.json':
+            target = {}
+            boxes = [];
+            boxes.append([0,0,1,1])
+            boxes = torch.as_tensor(boxes, dtype=torch.float32)
+            labels = []
+            labels.append(0)
+            target["boxes"] = boxes
+            target["labels"] = torch.as_tensor(labels, dtype=torch.int64)
+            target["image_id"] = torch.tensor([idx])
+            target["area"] = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
+            target["iscrowd"] = torch.zeros((1,), dtype=torch.int64)
+        else:
+            with open(annotation_path) as f:
+                annotation = json.load(f)
             
-        # convert everything into a torch.Tensor
-        boxes = torch.as_tensor(boxes, dtype=torch.float32)
-        labels = torch.as_tensor(labels, dtype=torch.int64)
-        image_id = torch.tensor([idx])
-        
-        area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
-        
-        # suppose all instances are not crowd
-        iscrowd = torch.zeros((objNum,), dtype=torch.int64)
-        
-        target = {}
-        target["boxes"] = boxes
-        target["labels"] = labels
-        target["image_id"] = image_id
-        target["area"] = area
-        target["iscrowd"] = iscrowd
+            objNum = len(annotation['image_data']['visible_latex_chars'])
+            boxes = []
+            labels = []
+            for n in range(objNum):
+                xmin = annotation['image_data']['xmins_raw'][n]
+                xmax = annotation['image_data']['xmaxs_raw'][n]
+                ymin = annotation['image_data']['ymins_raw'][n]
+                ymax = annotation['image_data']['ymaxs_raw'][n]
+                boxes.append([xmin, ymin, xmax, ymax])
+                labelSymbol = annotation['image_data']['visible_latex_chars'][n]
+                labels.append(self.getClassLabelFromSymbol(self.classLabels, labelSymbol))
+                
+            # convert everything into a torch.Tensor
+            boxes = torch.as_tensor(boxes, dtype=torch.float32)
+            labels = torch.as_tensor(labels, dtype=torch.int64)
+            image_id = torch.tensor([idx])
+            
+            area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
+            
+            # suppose all instances are not crowd
+            iscrowd = torch.zeros((objNum,), dtype=torch.int64)
+            
+            target = {}
+            target["boxes"] = boxes
+            target["labels"] = labels
+            target["image_id"] = image_id
+            target["area"] = area
+            target["iscrowd"] = iscrowd
         
         if self.transforms is not None:
             img, target = self.transforms(img, target)
