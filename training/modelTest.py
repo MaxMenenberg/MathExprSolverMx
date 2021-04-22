@@ -8,6 +8,7 @@ from PIL import ImageDraw
 import transforms
 import json
 from IPython.display import display
+import pickle
 
 to_tensor = transforms.ToTensor()
 def PilImage2Tensot(PilImage):
@@ -67,7 +68,7 @@ def draw_bounding_boxes_on_image(img, xmins, ymins, xmaxs, ymaxs, labels,scores,
             draw_obj.text((xmin, ymin), text, fill = "green")
 
 modelFile = r'C:\Users\maxwe\Desktop\My Documents\MathExprSolverMx\MathExprSolverMx\training\mathRecognizerMx_4epochw20kBgrd.pt'
-testImageFile = r'C:\Users\maxwe\Desktop\My Documents\MathExprSolverMx\MathExprSolverMx\AidaCalculusHandWrittenMathDataset\archive\test\images\5dcfbfda-bfaf-4502-9916-554023f18d21.jpg'
+#testImageFile = r'C:\Users\maxwe\Desktop\My Documents\MathExprSolverMx\MathExprSolverMx\AidaCalculusHandWrittenMathDataset\archive\test\images\5dcfbfda-bfaf-4502-9916-554023f18d21.jpg'
 testImageFile = os.path.join(os.getcwd(),'testimg.jpg')
 image = Image.open(testImageFile).convert("RGB")
 imageTensor = PilImage2Tensot(image)
@@ -102,6 +103,10 @@ for n in range(len(labels)):
     labelSymbols.append(classLabels[str(labels[n])])
 draw_bounding_boxes_on_image(image, boxes[:,0],  boxes[:,1], boxes[:,2],  boxes[:,3], labelSymbols ,scores,scoreLim=0.5)
 
+saveDetections = 0;
+if saveDetections == 1:
+    with open('detection.bin', 'wb') as f:
+        detections = pickle.dump(detections, f)
 
 # Visualize!
 display(image)

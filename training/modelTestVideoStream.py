@@ -70,7 +70,7 @@ def draw_bounding_boxes_on_image(img, xmins, ymins, xmaxs, ymaxs, labels,scores,
             
 video_capture = cv2.VideoCapture(0)
 
-modelFile = r'C:\Users\maxwe\Desktop\My Documents\MathExprSolverMx\MathExprSolverMx\training\mathRecognizerMx_4epochw20kBgrd.pt'
+modelFile = r'C:\Users\maxwe\Desktop\My Documents\MathExprSolverMx\MathExprSolverMx\training\mathRecognizerMx_4epochw20kBgrdq.pt'
 #modelFile = r'C:\Users\maxwe\Desktop\My Documents\MathExprSolverMx\MathExprSolverMx\training\mathRecognizerMx_1epoch.pt'
 
 with open(os.path.join(os.getcwd(), 'classLabels.json'), encoding = 'utf8') as f:

@@ -1,0 +1,41 @@
+The current object detection model does not do a good job of differentiating between
+left parentheses "(" and rigth parentheses ")".
+
+
+Assuming the object detection model tells us where the parentheses are, and that they are
+properly used in the equation we dont need to trust the label from the model
+
+I.E. \\left( = \\right) == P
+
+(a + b)(c + d) would be seen as Pa + bPPc + dP
+
+we can us the following rules to figure out the correct orrientation of each parenthese
+
+Let Ps be the left most identified (i.e. the starting one) parenthese and let Pe be the
+right most parenthese (i.e. the ending on)
+
+Let L denote a "(" and R denote ")". Each P in a math expression sequence can equal an L or an R
+
+Rule #1: Ps = L and Pe = R
+Rule #2: The number of Ls must equal the number of Rs
+Rule #3: The sequence LR is forbidden
+Rule #4: The sequence bR is forbidden where b is a binary operator
+
+
+Example of Rule #3
+(a + b()c + d)
+
+Example of Rule #4
+
+((a + b) (c - (de))) Allowed
+
+((a + b((c - )de))) Rule #4 Broken
+
+Suppose we have the sequence 
+
+PPa+bPPcPdePP+5 There are two valid parenthese assignements
+
+Assignment #1: ((a+b)(c(de))+5)
+Assignment #2: ((a+b((c)de))+5)
+
+how to choose between these 2. Assignment #2 seems less like something someone would do

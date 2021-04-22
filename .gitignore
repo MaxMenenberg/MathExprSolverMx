@@ -2,3 +2,5 @@ AidaCalculusHandWrittenMathDataset/
 whiteboardImages/
 models/ 
 BackgroundImages/
+SolverMxEngine/testResources
+SolverMxEngine/__pycache__
