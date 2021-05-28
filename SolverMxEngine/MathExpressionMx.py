@@ -139,5 +139,77 @@ class MathExpression:
                         # The symbol is not part of the fraction
                         else:
                             pass
-            
+                        
+    # Identify which symboles are exponents and what their bases are
+    def exponentAnalysis(self):
+        alpha = 1.5  #Threshold for ratio of base to exponent
+        beta = 0.6   #Threshold for normalized different of heights between base and exponent
+        gamma = -1   #Threshold for normailzed difference in x-center between base and exponent
+        # We also dont want the width of a possible exponent candidate to be large than the base,
+        # this is to screen out a denominator thinking its fraction bar is an
+        # exponent, but small fraction bars can be exponents
         
+        
+        
+        # Operators cannot be a base of an exponential expression
+        invalidBases = [r'\frac', '-', '+', '\\left(','\\right)', '*', '^']
+        
+        # For each symbols see if it has a neighbor that meets all of the 
+        # exponent criteria. If so, mark them as exponent and base pairs
+        
+        baseIndex = 0;
+        for n in range(self.symbolCount):
+            
+            if not (self.MathSymbolList[n].symbol in invalidBases):
+                tempSymbol = self.MathSymbolList[n];
+                
+                for m in range(self.symbolCount):
+                    if m != n: # Dont compare to self
+                       tempSymbol2 = self.MathSymbolList[m]
+                       
+                       alphaCheck = tempSymbol.height/tempSymbol2.height > alpha
+                       betaCheck = (tempSymbol.center[1] - tempSymbol2.center[1])/tempSymbol.height > beta
+                       gammaCheck = ( (tempSymbol.center[0] - tempSymbol2.center[0])/tempSymbol.width > gamma 
+                                     and (tempSymbol.center[0] - tempSymbol2.center[0]) < 0 )
+                       widthCheck = tempSymbol.width > tempSymbol2.width;
+                       
+                       if alphaCheck and betaCheck and gammaCheck and widthCheck:
+                           self.MathSymbolList[n].bases.append(baseIndex)
+                           self.MathSymbolList[m].exponents.append(baseIndex)
+                           baseIndex += 1
+        
+        # Now that the initial base exponent pairs have been found there might
+        # still be other symbols part of exponents that didnt get caught because
+        # the expression in the exponent is strucurally large. To try and find
+        # the remaining exponent symbols we examine all symbols marked as 
+        # exponents and see if they have neighbors that are likely also
+        # part of the same expression in an exponent
+        
+        # Criteria: Symbol must be "near" the exponent and of a similar size
+        delta = 2;
+        epsilon = 0.75;
+        for n in range(self.symbolCount):
+            tempSymbol = self.MathSymbolList[n];
+            if len(tempSymbol.exponents):
+                tempH = tempSymbol.height;
+                tempW = tempSymbol.width;
+                tempX = tempSymbol.center[0]
+                tempY = tempSymbol.center[1]
+                for m in range(self.symbolCount):
+                    tempSymbol2 = self.MathSymbolList[m];
+                    if n != m and not any(item in tempSymbol.exponents for item in tempSymbol2.exponents):
+                        temp2H = tempSymbol2.height;
+                        temp2W = tempSymbol2.width;
+                        temp2X = tempSymbol2.center[0]
+                        temp2Y = tempSymbol2.center[1]
+                        
+                        xCheck = np.abs(tempX - temp2X)/tempW < delta
+                        yCheck = np.abs(tempY - temp2Y)/tempH < delta
+                        wCheck = tempW/temp2W > (1- epsilon) and tempW/temp2W < (1+epsilon)
+                        hCheck = tempH/temp2H > (1- epsilon) and tempH/temp2H < (1+epsilon)
+                        
+                        if xCheck and yCheck and (wCheck or hCheck):
+                            for k in range(len(tempSymbol.exponents)):
+                                self.MathSymbolList[m].exponents.append(tempSymbol.exponents[k])
+                            
+                        

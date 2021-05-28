@@ -4,3 +4,4 @@ models/
 BackgroundImages/
 SolverMxEngine/testResources
 SolverMxEngine/__pycache__
+*.pt
