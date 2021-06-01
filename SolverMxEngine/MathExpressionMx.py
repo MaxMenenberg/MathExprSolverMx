@@ -11,6 +11,7 @@ class MathSymbol:
         self.height = box[3] - box[1]
         self.center = (np.mean((box[2], box[0])), np.mean((box[3], box[1]))) 
         self.isFrac = False
+        self.needsProcessing = True
         self.fracIndex = -1
         self.numerators = []
         self.denominators = []
@@ -26,11 +27,15 @@ class MathExpression:
 
         self.MathSymbolList = MathSymbolList
         self.symbolCount = len(self.MathSymbolList)
-        self.fracCount = 0;
-        self.infixString = '';
-        self.latexString = '';
-        self.postfixString = '';
+        self.fracCount = 0
+        self.exponCount = 0
+        self.infixString = ''
+        self.latexString = ''
+        self.postfixString = ''
         self.unmapParens()
+        self.exponentAnalysis()
+        self.fractionAnalysis()
+        
         
     # The object detection model does not do a good job and distinguishing
     # \\left( from \\right) so right from the start lets map all parens
@@ -80,6 +85,7 @@ class MathExpression:
                 if self.MathSymbolList[n].symbol == r'\frac':
                     fracList.append(self.MathSymbolList[n])
                     self.MathSymbolList[n].isFrac = True
+                    self.fractionCount += 1
             
             # Sort the fractions from largest to smallest
             self.sortSymbolListbySize(fracList)
@@ -177,6 +183,7 @@ class MathExpression:
                            self.MathSymbolList[n].bases.append(baseIndex)
                            self.MathSymbolList[m].exponents.append(baseIndex)
                            baseIndex += 1
+                           self.exponCount += 1
         
         # Now that the initial base exponent pairs have been found there might
         # still be other symbols part of exponents that didnt get caught because
@@ -211,5 +218,151 @@ class MathExpression:
                         if xCheck and yCheck and (wCheck or hCheck):
                             for k in range(len(tempSymbol.exponents)):
                                 self.MathSymbolList[m].exponents.append(tempSymbol.exponents[k])
-                            
+     
+    # Process a simple epression. I.E. a list of symbols with no fractions
+    # or exponents. A single line
+    def processSimpleExpression(self, symbolList):
+        # First sort the symbols from left to right
+        
+        for n in range(len(symbolList)):
+            for m in range(len(symbolList)-1):
+                if symbolList[m].center(0) > symbolList[m+1].center(0):
+                    temp = symbolList[m]
+                    symbolList[m] = symbolList[m+1]
+                    symbolList[m+1] = temp
+                    
+        # Check if there are any unbalanced parentheses
+        parenBalanceNeeded = False
+        parenIndices = []
+        for n in range(len(symbolList)):
+            if symbolList[m].symbol == '$':
+                parenBalanceNeeded = True
+                parenIndices.append(n)
+                
+        if parenBalanceNeeded:
+            parenBalance = False
+            symbolList[parenIndices[0]].symbol = '\\left('
+            symbolList[parenIndices[len(parenIndices)-1]].symbol = '\\right)'  
+            
+            if len(parenIndices) == 2:
+                parenBalance = True
+                
+            # Hopefully we never have an odd number of parentheses
+            if np.mod(len(parenIndices), 2) == 1:
+                endSym = symbolList[len(symbolList)-1]
+                symbolList.append(MathSymbol(endSym.box, '\\right)', endSym.index))
+            
+            # Create some initial state for the other unassigned parentheses
+            for n in range(1, len(parenIndices)-1, 1):
+                    if np.mod(n, 2) == 1:
+                        symbolList[parenIndices[n]].symbol == '\\right)'
+                    else:
+                        symbolList[parenIndices[n]].symbol == '\\left('
+                    
+            while(parenBalance == False):
+                
+               # Check the following set of rules and only if all rules are met
+               # can we set parenBalance == True
+               
+               # Check #1: There must be equal number of \\right) to \\left(
+               check1 = False
+               leftCount = 0
+               rightCount = 0
+               for n in range(len(symbolList)):
+                   if symbolList[n].symbol == '\\left(':
+                       leftCount += 1
+                   if symbolList[n].symbol == '\\right)':
+                       rightCount += 1
+                       
+               if leftCount == rightCount:
+                   check1 = True;
+                
+                # Check #2: There cant be the sequence ()
+               check2 = True
+               for n in range(len(symbolList)-1):
+                    if symbolList[n].symbol == '\\left(' and symbolList[n+1].symbol == '\\right)':
+                        check2 = False
+               
+               # Check #3: There can't be a binary operator before a )
+               binOperators = ['-', '+', '*', '^', '/']
+               check3 = True
+               for n in range(len(symbolList)-1):
+                    if symbolList[n].symbol in binOperators and symbolList[n+1].symbol == '\\right)':
+                        check3 = False
+                
+               if check1 and check2 and check3:
+                    parenBalance = True
+                
+               # If corrections need to be made
+               if parenBalance == False:
+                   
+                   if check2 == False:
+                       for n in range(len(symbolList)-1):
+                           if symbolList[n].symbol == '\\left(' and symbolList[n+1].symbol == '\\right)':
+                               symbolList[n].symbol == '\\right)'
+                               symbolList[n+1].symbol == '\\left('
+                               
+                   if check3 == False:
+                       for n in range(len(symbolList)-1):
+                           if symbolList[n].symbol in binOperators and symbolList[n+1].symbol == '\\right)':
+                               symbolList[n+1].symbol == '\\left('
+                               
+                               # Then find the left parenthese to the left of this symbol we just corrected and
+                               # change it to a \\right. If we dont find any to the left, search to the right
+                               
+                               foundLeft = False
+                               for m in range(n, 0, -1):
+                                   if symbolList[m].symbol == '\\left(':
+                                       symbolList[m].symbol == '\\right)'
+                                       foundLeft = True
+                               if not foundLeft:
+                                     for m in range(n+2, len(symbolList)-1, 1):
+                                         if symbolList[m].symbol == '\\left(':
+                                             symbolList[m].symbol == '\\right)'
+                                             foundLeft = True
+                               
+            # Now that the parentheses are balanced
+            newSymbolString = '';
+            for n in range(len(symbolList)):
+                newSymbolString += symbolList[m].symbol
+                
+            newSymbolBox = []
+            newSymbolBox.append(symbolList[0].box[0])  # xmin
+            newSymbolBox.append(symbolList[0].box[1])  # ymin
+            newSymbolBox.append(symbolList[-1].box[2]) # xmax
+            newSymbolBox.append(symbolList[0].box[3])  # ymax
+            
+            return MathSymbol(newSymbolBox, newSymbolString, symbolList[0].index)
+                               
+    def createInfixString(self):
+        
+        # Process exponent sub expressions if any
+        if self.exponCount > 0:
+            highestIndex = self.exponCount - 1
+            
+            for n in range(highestIndex, -1, -1):
+                tempExSyms = [];
+                
+                for m in range(self.symbolCount):
+                    tempSymbol = self.MathSymbolList[m]
+                    if n in tempSymbol.exponents:
+                        tempExSyms.append(self.MathSymbolList[m])
                         
+                # Now check if there are any fractions in the subexpression
+                for m in range(len(tempExSyms)):
+                    if tempExSyms[m].symbol == r'\frac':
+                        tempFracIndex = tempExSyms[m].fracIndex
+                        numerator = []
+                        denominator = []
+                        for k in range(len(tempExSyms)):
+                            if tempFracIndex in tempExSyms[k].numerators:
+                                numerator.append(tempExSyms[k])
+                            if tempFracIndex in tempExSyms[k].denominators:
+                                denominator.append(tempExSyms[k])
+                        
+                        pass
+                    pass
+                pass
+                    
+                        
+                               
